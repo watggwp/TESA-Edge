@@ -67,12 +67,12 @@ outputs/
 | :---- | :---- |
 | `infer.py` | โปรแกรมทำนาย (`load_model()`, `predict_image()`) |
 | `crop_beans.py` | **จำเป็น** — ฟังก์ชันแยกเม็ดที่ `infer.py` import ต้องอยู่โฟลเดอร์เดียวกับ `infer.py` |
-| `weights/model.pt` | weights ของโมเดล + config (arch, คลาส, ขนาด input, mean/std, `ref_area`) |
+| `weights/best.pt` | weights ของโมเดล + config (arch, คลาส, ขนาด input, mean/std, `ref_area`) |
 | `weights/config.json` | config ชุดเดียวกันแบบอ่านได้ (ใช้เมื่อไฟล์ weight เป็น state_dict ล้วน) |
 
 `ref_area` (= 3457 px ที่ภาพด้านยาว 1536) คือขนาดเม็ดเดี่ยวที่วัดจากภาพ train ใช้แยกเม็ดในภาพกองตอน infer
 
-ลำดับการหาไฟล์ weight ใน `--weights`: ใช้ `model.pt` ก่อน ถ้าไม่มีจะใช้ไฟล์ `.pt` / `.pth` ไฟล์แรกตามลำดับชื่อ (ค้นในโฟลเดอร์ย่อยด้วย)
+ลำดับการหาไฟล์ weight ใน `--weights`: ใช้ `best.pt` ก่อน ถ้าไม่มีจะใช้ไฟล์ `.pt` / `.pth` ไฟล์แรกตามลำดับชื่อ (ค้นในโฟลเดอร์ย่อยด้วย)
 
 ## การ train (ไม่ต้องใช้ตอนตรวจ)
 
@@ -100,6 +100,23 @@ python train.py --mode full --out weights          # 3) train ด้วยข้
 
 ผล CV (แต่ละคลาสมี 3 ภาพ layout circle / grid / square · กัน layout หนึ่งของทุกคลาสไว้เป็น val ทีละ fold): ถูกรายภาพ 20/21 (95%), รายเม็ด 83%
 
+## ทดสอบด้วยกล้องมือถือ (ไม่ใช่ส่วนของงานส่ง)
+
+`web_app.py` เปิดหน้าเว็บให้มือถือถ่ายรูปส่งมาให้คอมทำนาย แล้วได้ภาพวาดกรอบสีตามคลาสรายเม็ดกลับไป
+
+```sh
+pip install -r requirements-web.txt
+python web_app.py --weights weights/          # --port 8000 (ค่าเริ่มต้น)
+```
+
+โปรแกรมพิมพ์ URL เช่น `http://192.168.1.103:8000` → เปิดบนมือถือที่ต่อ **Wi-Fi วงเดียวกับคอม** → กด 📷 ถ่ายรูป หรือ 🖼️ เลือกจากคลังภาพ
+
+- Windows อาจถามให้อนุญาต Python ผ่าน Firewall ครั้งแรก — ต้องกดอนุญาต (Private network) มือถือจึงเข้าได้
+- ภาพไม่ถูกบันทึกลงเครื่อง · ถ้ามือถือบันทึกภาพเป็น HEIC ให้ตั้งกล้องเป็น JPEG
+- ทดสอบ: `python -m unittest tests.test_web_app -v`
+
+ไม่ต้องใส่ `web_app.py`, `requirements-web.txt`, `tests/` และ `docs/` ใน zip ที่ส่ง
+
 ## โครงสร้างไฟล์ส่งงาน
 
 ```
@@ -110,7 +127,7 @@ team_XX_day1/
 ├── crop_beans.py
 ├── infer.py
 ├── weights/
-│   ├── model.pt
+│   ├── best.pt
 │   └── config.json
 └── outputs/
 ```
