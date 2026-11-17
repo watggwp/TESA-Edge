@@ -1,0 +1,7 @@
+# dependency สำหรับ infer.py เท่านั้น (Raspberry Pi 64-bit, CPU)
+# ทดสอบกับ: torch 2.11.0, torchvision 0.26.0, opencv 4.11.0, numpy 2.2.6, Pillow 11.3.0 (Python 3.12)
+torch>=2.0
+torchvision>=0.15
+opencv-python-headless>=4.8
+numpy>=1.24
+Pillow>=10.0
