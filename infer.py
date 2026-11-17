@@ -31,7 +31,7 @@ from crop_beans import extract_beans, load_image  # noqa: E402
 CLASSES = ["good", "shell", "black", "husk", "broken", "parchment", "immature"]
 IMG_EXTS = {".jpg", ".jpeg", ".png"}
 WEIGHT_EXTS = (".pt", ".pth")
-PREFERRED_WEIGHT = "model.pt"
+PREFERRED_WEIGHT = "best.pt"
 CROP_SIZE = 256               # ต้องตรงกับ --size ของ crop_beans.py ตอน train
 
 

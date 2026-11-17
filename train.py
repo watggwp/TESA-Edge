@@ -6,7 +6,7 @@
     python train.py --mode full --out weights          # 3) train ด้วยข้อมูลทั้งหมด แล้วบันทึก weights/
 
 ผลลัพธ์ของ --mode full:
-    weights/model.pt     {arch, state_dict, classes, img_size, mean, std}
+    weights/best.pt      {arch, state_dict, classes, img_size, mean, std}
     weights/config.json  ค่าเดียวกัน (ไม่มี state_dict) + ref_area สำหรับแยกเม็ดตอน infer
 
 การ validate (--mode cv): แต่ละคลาสมี 3 ภาพ (circle / grid / square) → 3 fold
@@ -15,6 +15,7 @@
 """
 import argparse
 import csv
+import gc
 import json
 import math
 import random
@@ -208,6 +209,12 @@ def train_model(train_items, args, device, log_prefix=""):
         if (ep + 1) % args.log_every == 0 or ep == args.epochs - 1:
             print(f"{log_prefix}epoch {ep + 1:3d}/{args.epochs}  loss {tot / n:.4f}  "
                   f"train-acc {correct / n:.3f}  ({time.time() - t0:.1f}s)")
+    # ปิด worker ของ DataLoader ทันที (persistent workers ไม่ปิดเอง → RAM เต็มเมื่อ train หลาย fold)
+    it = getattr(dl, "_iterator", None)
+    if it is not None and hasattr(it, "_shutdown_workers"):
+        it._shutdown_workers()
+    del dl, ds, pool
+    gc.collect()
     return model
 
 
@@ -304,9 +311,9 @@ def main():
             cfg.update(json.loads(seg.read_text(encoding="utf-8")))
         else:
             print(f"[warn] ไม่พบ {seg} — infer จะประมาณขนาดเม็ดจากภาพเอง")
-        torch.save({**cfg, "state_dict": model.cpu().state_dict()}, out / "model.pt")
+        torch.save({**cfg, "state_dict": model.cpu().state_dict()}, out / "best.pt")
         (out / "config.json").write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"บันทึก {out / 'model.pt'} และ {out / 'config.json'}")
+        print(f"บันทึก {out / 'best.pt'} และ {out / 'config.json'}")
 
 
 if __name__ == "__main__":
